@@ -1,58 +1,71 @@
 use("intranet")
-
 //db.cabeot.find({c_numot:1000028211})
-
 //db.detaot.find({c_numot:1000028211})
+//explain()
+//explain("executionStats")
 db.cabeot.aggregate([
-
-    {
-        //si solo quiero hacer la consulta a una sola orden 
-        $match: {
-            //estamos filtrando por orders
-            c_numot: 1000028211
-        }
-    },
-
+    {$project:{_id:0,}},
+    {$match: {c_numot: 1000028211}},  
     {
         $lookup: {
-          //quiero ir hacia la coleccion de users
           from: 'detaot',
-          //los campos que hacen match
-          //en coleccion inicio de orders
           localField: 'c_numot',
-          //en coleccion destino users
           foreignField: 'c_numot',
-          //como se etiquetara la respuesta
-          as: 'Detalle'
+          as: 'DetalleOt',
+          pipeline: [
+           {
+            $project:{_id:0}
+           } ,
+           {
+            $lookup: {
+                from: 'notmae',
+                localField: 'c_numot',
+                foreignField: 'c_NumOT',
+                as: 'NotaSalida',
+                pipeline: [
+                 {
+                  $project:{_id:0}
+                 } ,
+                 {
+                    $lookup: {
+                        from: 'notmov',
+                        localField: 'NT_NDOC',
+                        foreignField: 'NT_NDOC',
+                        as: 'NotaSalidaDetalle',
+                        pipeline: [
+                            {
+                             $project:{_id:0}
+                            },
+                            {
+                                $lookup: {
+                                    from: 'invmae',
+                                    localField: 'NT_CART',
+                                    foreignField: 'IN_CODI',
+                                    as: 'DetalleInsumo',
+                                    pipeline: [
+                                        {
+                                            $project:{
+                                                _id:0, 
+                                                IN_ARTI:1,
+                                                IN_UVTA:1,
+                                                IN_COST:1
+                                            }
+                                        },
+                                        
+                                       ]
+                                }
+                            }
+                           ]
+                    }
+    
+                 }
+    
+                ],
+    
+    
+              },
         }
-    }
+          ]
+        }
+    },   
 ])
-//db.notmae.find({c_numot:1000028211})
-//S0026870 ->NT_NDOC
-//S0026873 ->NT_NDOC
-//db.notmov.find({c_numot:1000028211})
-db.notmae.aggregate([
-
-    {
-        //si solo quiero hacer la consulta a una sola orden 
-        $match: {
-            //estamos filtrando por orders
-            c_NumOT: 1000028211
-        }
-    },
-
-    {
-        $lookup: {
-          //quiero ir hacia la coleccion de users
-          from: 'notmov',
-          //los campos que hacen match
-          //en coleccion inicio de orders
-          localField: 'NT_NDOC',
-          //en coleccion destino users
-          foreignField: 'NT_NDOC',
-          //como se etiquetara la respuesta
-          as: 'Insumos Consumidos '
-        }
-    }
-])
-
