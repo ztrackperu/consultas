@@ -3,69 +3,101 @@ use("intranet")
 //db.detaot.find({c_numot:1000028211})
 //explain()
 //explain("executionStats")
+//tabla de referencia es cabeot
+
 db.cabeot.aggregate([
     {$project:{_id:0,}},
-    {$match: {c_numot: 1000028211}},  
+    {$match: {c_numot: 1000027611}},  
     {
         $lookup: {
-          from: 'detaot',
-          localField: 'c_numot',
-          foreignField: 'c_numot',
-          as: 'DetalleOt',
-          pipeline: [
-           {
-            $project:{_id:0}
-           } ,
-           {
-            $lookup: {
-                from: 'notmae',
-                localField: 'c_numot',
-                foreignField: 'c_NumOT',
-                as: 'NotaSalida',
-                pipeline: [
-                 {
-                  $project:{_id:0}
-                 } ,
-                 {
+            from: 'detaot',
+            localField: 'c_numot',
+            foreignField: 'c_numot',
+            as: 'DetalleOt',
+            pipeline: [
+                {$project:{_id:0}} ,
+
+            ]
+        },
+    }, 
+    {
+        $lookup: {
+            from: 'notmae',
+            localField: 'c_numot',
+            foreignField: 'c_NumOT',
+            as: 'NotaSalida',
+            pipeline: [
+                {$project:{_id:0}} ,
+                {
                     $lookup: {
                         from: 'notmov',
                         localField: 'NT_NDOC',
                         foreignField: 'NT_NDOC',
                         as: 'NotaSalidaDetalle',
                         pipeline: [
-                            {
-                             $project:{_id:0}
-                            },
+                            {$project:{_id:0}},
                             {
                                 $lookup: {
-                                    from: 'invmae',
+                                    from: 'detaoc',
                                     localField: 'NT_CART',
-                                    foreignField: 'IN_CODI',
-                                    as: 'DetalleInsumo',
+                                    foreignField: 'c_codprd',
+                                    as: 'detaoc',
                                     pipeline: [
+                                        {$project:{_id:0}},
+                                        {$sort :{c_numeoc:-1}} ,
+                                        {$limit :1},
                                         {
-                                            $project:{
-                                                _id:0, 
-                                                IN_ARTI:1,
-                                                IN_UVTA:1,
-                                                IN_COST:1
+                                            $lookup: {
+                                                from: 'invmae',
+                                                localField: 'c_codprd',
+                                                foreignField: 'IN_CODI',
+                                                as: 'DetalleInsumo',
+                                                pipeline: [
+                                                    {$project:{_id:0,IN_ARTI:1}},
+                                                    //IN_ARTI:1,IN_UVTA:1,COD_CLASE:1
+                                                                           
+                                                ]
                                             }
                                         },
-                                        
-                                       ]
+                                        {
+                                            $lookup: {
+                                                from: 'cabeoc',
+                                                localField: 'c_numeoc',
+                                                foreignField: 'c_numeoc',
+                                                as: 'moneda',
+                                                pipeline: [
+                                                    {$project:{_id:0,c_codmon:1}},                                                                           
+                                                ]
+                                            }
+                                        },
+                                    ]
                                 }
+         
                             }
-                           ]
+                        ]
                     }
-    
-                 }
-    
-                ],
-    
-    
-              },
+                }
+            ]
         }
-          ]
-        }
-    },   
+    }
 ])
+
+
+/*
+db.invmae.aggregate([
+    {$project:{_id:0,IN_CODI:1,COD_CLASE:1}} ,
+    { $match : { $or :[ {COD_CLASE : '010'} ,{COD_CLASE : '009'},{COD_CLASE : '023'} ,{COD_CLASE : '024'}] }} ,    
+    {   
+        $lookup: {
+            from: 'detaoc',
+            localField: 'IN_CODI',
+            foreignField: 'c_codprd',
+            as: 'd',
+        },   
+    },
+    
+])
+
+*/
+
+
